@@ -1,5 +1,7 @@
 # PKCS7::Cryptographer
 
+[![Gem Version](https://badge.fury.io/rb/pkcs7-cryptographer.svg)](https://badge.fury.io/rb/pkcs7-cryptographer)
+
 Cryptographer is an small utility that allows to encrypt and decrypt messages
 using PKCS7.
 
