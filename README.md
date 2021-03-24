@@ -1,6 +1,9 @@
 # PKCS7::Cryptographer
 
 [![Gem Version](https://badge.fury.io/rb/pkcs7-cryptographer.svg)](https://badge.fury.io/rb/pkcs7-cryptographer)
+![main workflow](https://github.com/dmuneras/pkcs7-cryptographer/actions/workflows/main.yml/badge.svg)
+
+
 
 Cryptographer is an small utility that allows to encrypt and decrypt messages
 using PKCS7.
@@ -44,8 +47,8 @@ Read the following example to get a better undertanding:
   # This script assumes you have a read_file method to read the certificates and
   # keys.
 
-  # What we are going to do is sign an encrypt a message from the CA Authority
-  # and read it from the Client:
+  # What we are going to do is signing an encrypting a message from the CA
+  # Authority and read it from the Client:
 
   # Certificate Authority PKI data
   CA_KEY = read_file("ca.key")
