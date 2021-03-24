@@ -1,6 +1,9 @@
+require:
+  - rubocop-rake
+  - rubocop-rspec
+
 AllCops:
   NewCops: enable
-  SuggestExtensions: false
 Style/StringLiterals:
   Enabled: true
   EnforcedStyle: double_quotes
@@ -14,3 +17,9 @@ Layout/LineLength:
 
 Metrics/BlockLength:
   IgnoredMethods: ['describe', 'context']
+
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+
+RSpec/NestedGroups:
+  Max: 4
