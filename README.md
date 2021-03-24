@@ -5,12 +5,13 @@
 
 
 
-Cryptographer is an small utility that allows to encrypt and decrypt messages
+Cryptographer is an small utility to encrypt and decrypt messages
 using PKCS7.
 
-PKCS7 is used to store signed and encrypted data.It uses aes-256-cbc
-as chipher in the encryption process. If you want to read more information about
-the involved data structures and theory around this, please visit:
+PKCS7 is used to store signed and encrypted data.This specific implementation
+uses aes-256-cbc as chipher in the encryption process. If you want to read more
+information about the involved data structures and theory around this,
+please visit:
 
 - https://ruby-doc.org/stdlib-3.0.0/libdoc/openssl/rdoc/OpenSSL.html
 - https://tools.ietf.org/html/rfc5652
@@ -25,17 +26,20 @@ gem 'pkcs7-cryptographer'
 
 And then execute:
 
+```sh
   $ bundle install
+```
 
 Or install it yourself as:
 
+```sh
   $ gem install pkcs7-cryptographer
-
+```
 ## Usage
 
 After installing the gem you will have the `PKCS7::Cryptographer` available.
 
-`PKCS7::Cryptographer` is a class that provides to public methods:
+`PKCS7::Cryptographer` is a class that provides two public methods:
 
 - `sign_and_encrypt`
 - `decrypt_and_verify`
