@@ -118,7 +118,6 @@ Read the following examples to get a better undertanding:
 
   # Client PKI data
   CLIENT_CERTIFICATE = read_file("client.crt")
-  CLIENT_KEY = read_file("client.key")
 
   CA_STORE = OpenSSL::X509::Store.new
   CA_STORE.add_cert(OpenSSL::X509::Certificate.new(CA_CERTIFICATE))
@@ -130,9 +129,7 @@ Read the following examples to get a better undertanding:
   )
 
   client_entity = PKCS7::Cryptographer::Entity.new(
-    key: CLIENT_KEY,
     certificate: CLIENT_CERTIFICATE,
-    ca_store: CA_STORE
   )
 
   # SEND MESSAGE TO THE CLIENT

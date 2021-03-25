@@ -17,8 +17,12 @@ module PKCS7
 
       # PUBLIC METHODS
       # ------------------------------------------------------------------------
-      def initialize(key:, certificate:, ca_store: OpenSSL::X509::Store.new)
-        @key = rsa_key(key)
+      def initialize(
+        certificate:,
+        key: nil,
+        ca_store: OpenSSL::X509::Store.new
+      )
+        @key = key ? rsa_key(key) : nil
         @certificate = x509_certificate(certificate)
         @cryptographer = PKCS7::Cryptographer.new
         @ca_store = ca_store
@@ -57,7 +61,7 @@ module PKCS7
 
       def perform_safely(entity)
         return false unless trustable_entity?(entity)
-
+        return false unless @key.present?
         yield
       end
     end

@@ -100,12 +100,9 @@ RSpec.describe PKCS7::Cryptographer::Entity do
 
     context "when entity is trustable" do
       let(:client_certificate) { read_file("client.crt") }
-      let(:client_key) { read_file("client.key") }
       let(:client_entity) do
         described_class.new(
-          key: client_key,
-          certificate: client_certificate,
-          ca_store: ca_store
+          certificate: client_certificate
         )
       end
 
@@ -122,12 +119,9 @@ RSpec.describe PKCS7::Cryptographer::Entity do
 
     context "when entity is not trustable" do
       let(:pirate_certificate) { read_file("pirate.crt") }
-      let(:pirate_key) { read_file("pirate.key") }
       let(:pirate_entity) do
         described_class.new(
-          key: pirate_key,
-          certificate: pirate_certificate,
-          ca_store: ca_store
+          certificate: pirate_certificate
         )
       end
 
