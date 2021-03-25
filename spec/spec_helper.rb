@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "pkcs7/cryptographer"
+require "pkcs7/cryptographer/entity"
 require "pry"
 
 # Load RSpec helpers

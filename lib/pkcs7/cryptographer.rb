@@ -2,6 +2,7 @@
 
 require "openssl"
 require_relative "cryptographer/version"
+require_relative "cryptographer/initializers"
 
 module PKCS7
   ###
@@ -14,6 +15,8 @@ module PKCS7
   # - https://tools.ietf.org/html/rfc5652
   ###
   class Cryptographer
+    include PKCS7::Cryptographer::Initializers
+
     # PUBLIC METHODS
     # --------------------------------------------------------------------------
 
@@ -74,26 +77,6 @@ module PKCS7
       return false unless signed_data.verify([public_certificate], ca_store)
 
       signed_data.data
-    end
-
-    # PRIVATE METHODS
-    # --------------------------------------------------------------------------
-    private
-
-    def x509_certificate(certificate)
-      wrap_in_class_or_return(certificate, OpenSSL::X509::Certificate)
-    end
-
-    def rsa_key(key)
-      wrap_in_class_or_return(key, OpenSSL::PKey::RSA)
-    end
-
-    def pkcs7(pkcs7)
-      wrap_in_class_or_return(pkcs7, OpenSSL::PKCS7)
-    end
-
-    def wrap_in_class_or_return(data, klass)
-      data.instance_of?(klass) ? data : klass.new(data)
     end
   end
 end
