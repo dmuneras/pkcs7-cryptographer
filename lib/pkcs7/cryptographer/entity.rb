@@ -61,7 +61,8 @@ module PKCS7
 
       def perform_safely(entity)
         return false unless trustable_entity?(entity)
-        return false unless @key.present?
+        return false unless @key
+
         yield
       end
     end
