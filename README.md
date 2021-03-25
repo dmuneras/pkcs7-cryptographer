@@ -129,7 +129,7 @@ Read the following examples to get a better undertanding:
   )
 
   client_entity = PKCS7::Cryptographer::Entity.new(
-    certificate: CLIENT_CERTIFICATE,
+    certificate: CLIENT_CERTIFICATE
   )
 
   # SEND MESSAGE TO THE CLIENT
