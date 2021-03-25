@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pkcs7-cryptographer (0.2.2)
+    pkcs7-cryptographer (0.2.3)
 
 GEM
   remote: https://rubygems.org/
