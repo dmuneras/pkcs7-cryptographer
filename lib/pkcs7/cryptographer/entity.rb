@@ -15,6 +15,8 @@ module PKCS7
 
       attr_reader :certificate
 
+      # PUBLIC METHODS
+      # ------------------------------------------------------------------------
       def initialize(key:, certificate:, ca_store: OpenSSL::X509::Store.new)
         @key = rsa_key(key)
         @certificate = x509_certificate(certificate)
@@ -22,23 +24,41 @@ module PKCS7
         @ca_store = ca_store
       end
 
+      def trustable_entity?(entity)
+        @ca_store.verify(entity.certificate)
+      end
+
       def encrypt_data(data:, to:)
-        @cryptographer.sign_and_encrypt(
-          data: data,
-          key: @key,
-          certificate: @certificate,
-          public_certificate: to.certificate
-        )
+        perform_safely(to) do
+          @cryptographer.sign_and_encrypt(
+            data: data,
+            key: @key,
+            certificate: @certificate,
+            public_certificate: to.certificate
+          )
+        end
       end
 
       def decrypt_data(data:, from:)
-        @cryptographer.decrypt_and_verify(
-          data: data,
-          key: @key,
-          certificate: @certificate,
-          public_certificate: from.certificate,
-          ca_store: @ca_store
-        )
+        perform_safely(from) do
+          @cryptographer.decrypt_and_verify(
+            data: data,
+            key: @key,
+            certificate: @certificate,
+            public_certificate: from.certificate,
+            ca_store: @ca_store
+          )
+        end
+      end
+
+      # PRIVATE METHODS
+      # ------------------------------------------------------------------------
+      private
+
+      def perform_safely(entity)
+        return false unless trustable_entity?(entity)
+
+        yield
       end
     end
   end

@@ -7,6 +7,7 @@ RSpec.describe PKCS7::Cryptographer::Entity do
     let(:client_certificate) { read_file("client.crt") }
     let(:client_key) { read_file("client.key") }
     let(:data) { read_file("encrypted_message_from_client.pem") }
+
     let(:ca_store) do
       ca_store = OpenSSL::X509::Store.new
       ca_certificate_obj = OpenSSL::X509::Certificate.new(ca_certificate)
@@ -39,7 +40,6 @@ RSpec.describe PKCS7::Cryptographer::Entity do
   end
 
   describe "#encrypt_data" do
-    let(:cryptographer) { described_class.new }
     let(:ca_certificate) { read_file("ca.crt") }
     let(:ca_key) { read_file("ca.key") }
     let(:client_certificate) { read_file("client.crt") }
@@ -83,6 +83,63 @@ RSpec.describe PKCS7::Cryptographer::Entity do
       expect(
         client_entity.decrypt_data(data: encrypted_data, from: ca_entity)
       ).to eq("Camilo Zuniga")
+    end
+  end
+
+  describe "#trustable?" do
+    let(:ca_certificate) { read_file("ca.crt") }
+    let(:ca_key) { read_file("ca.key") }
+    let(:ca_store) do
+      ca_store = OpenSSL::X509::Store.new
+      ca_certificate_obj =
+        OpenSSL::X509::Certificate.new(ca_certificate)
+      ca_store.add_cert(ca_certificate_obj)
+
+      ca_store
+    end
+
+    context "when entity is trustable" do
+      let(:client_certificate) { read_file("client.crt") }
+      let(:client_key) { read_file("client.key") }
+      let(:client_entity) do
+        described_class.new(
+          key: client_key,
+          certificate: client_certificate,
+          ca_store: ca_store
+        )
+      end
+
+      let(:ca_entity) do
+        described_class.new(
+          key: ca_key,
+          certificate: ca_certificate,
+          ca_store: ca_store
+        )
+      end
+
+      it { expect(ca_entity.trustable_entity?(client_entity)).to eq(true) }
+    end
+
+    context "when entity is not trustable" do
+      let(:pirate_certificate) { read_file("pirate.crt") }
+      let(:pirate_key) { read_file("pirate.key") }
+      let(:pirate_entity) do
+        described_class.new(
+          key: pirate_key,
+          certificate: pirate_certificate,
+          ca_store: ca_store
+        )
+      end
+
+      let(:ca_entity) do
+        described_class.new(
+          key: ca_key,
+          certificate: ca_certificate,
+          ca_store: ca_store
+        )
+      end
+
+      it { expect(ca_entity.trustable_entity?(pirate_entity)).to eq(false) }
     end
   end
 end
