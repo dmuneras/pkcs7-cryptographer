@@ -4,13 +4,12 @@
 ![main workflow](https://github.com/dmuneras/pkcs7-cryptographer/actions/workflows/main.yml/badge.svg)
 
 
-
-Cryptographer is an small utility to encrypt and decrypt messages
+Cryptographer is an small utility to encrypt, sign and decrypt messages
 using PKCS7.
 
 PKCS7 is used to store signed and encrypted data.This specific implementation
-uses aes-256-cbc as chipher in the encryption process. If you want to read more
-information about the involved data structures and theory around this,
+uses `aes-256-cbc` as chipher in the encryption process. If you want to read
+more information about the involved data structures and theory around this,
 please visit:
 
 - https://ruby-doc.org/stdlib-3.0.0/libdoc/openssl/rdoc/OpenSSL.html
@@ -37,6 +36,8 @@ Or install it yourself as:
 ```
 ## Usage
 
+### Using bare PKCS7::Cryptographer
+
 After installing the gem you will have the `PKCS7::Cryptographer` available.
 
 `PKCS7::Cryptographer` is a class that provides two public methods:
@@ -44,12 +45,13 @@ After installing the gem you will have the `PKCS7::Cryptographer` available.
 - `sign_and_encrypt`
 - `decrypt_and_verify`
 
-Read the following examples to get a better undertanding:
+If you want to use the barebones cryptographer, you can. Please look at the
+following example:
 
 
-### Using bare PKCS7::Cryptographer
 
 ```ruby
+  require 'pkcs7/cryptographer'
 
   # This script assumes you have a read_file method to read the certificates and
   # keys.
@@ -71,7 +73,7 @@ Read the following examples to get a better undertanding:
   # Only the client can read the message since the required public
   # certificate to read it is the client certificate.
 
-  # It could be read if the CA_STORE of the reader has certificate of the
+  # It could be read if the CA_STORE of the reader has the certificate of the
   # CA that signed the client certificate as trusted.
 
   cryptographer = PKCS7::Cryptographer.new
@@ -83,6 +85,8 @@ Read the following examples to get a better undertanding:
     certificate: CA_CERTIFICATE,
     public_certificate: CLIENT_CERTIFICATE
   )
+
+  # encrypted_data is a PEM formatted string
 
   # READ MESSAGE IN CLIENT
   # ----------------------------------------------------------------------------
@@ -103,7 +107,15 @@ Read the following examples to get a better undertanding:
 
 ### Using PKCS7::Cryptographer::Entity
 
+There is a possibility to use entities to communicate using encrypted data. In
+order to use it you have to import the entities implementation.
+
+Please look at the following example:
+
 ```ruby
+
+  require 'pkcs7/cryptographer'
+  require 'pkcs7/cryptographer/entity'
 
   # This script assumes you have a read_file method to read the certificates and
   # keys. If you have any question about how to generate the keys/certificates
@@ -146,6 +158,44 @@ Read the following examples to get a better undertanding:
 
   # decrypted_data returns: "Victor Ibarbo"
 ```
+
+When using entities, all the complexity of knowing which PKI credentials to
+send to the cryptographer dissapears. You only need to initialize the
+entities and use the methods to indicate to whom the message will be sent.
+
+If you want to verify if certain entity you defined "trust" another one, use the
+`trustable_entity?(<the other entity>)`.
+
+```ruby
+  ca_entity = PKCS7::Cryptographer::Entity.new(
+    key: CA_KEY,
+    certificate: CA_CERTIFICATE,
+    ca_store: CA_STORE
+  )
+
+  client_entity = PKCS7::Cryptographer::Entity.new(
+    certificate: CLIENT_CERTIFICATE
+  )
+
+  ca_entity.trustable_entity?(client_entity)
+
+  # Returns true because the client certificate was signed by the root
+  # certificate of the ca_authority.
+```
+
+When sending data to an entity, you will most of the time initialize the entity
+only with the `certificate` keyword arguments. So, initializing a receiver will
+most of the time looks like this:
+
+```ruby
+  client_entity = PKCS7::Cryptographer::Entity.new(
+    certificate: CLIENT_CERTIFICATE
+  )
+```
+
+The entity above can't encrypt messages or decrypt them, if you want to decrypt
+and encrypt the entity should have its the key (private key), certificate and
+the list of trusted certificates of the entity (ca_store).
 
 ## Development
 
