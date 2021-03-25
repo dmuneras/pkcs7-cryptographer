@@ -44,7 +44,10 @@ After installing the gem you will have the `PKCS7::Cryptographer` available.
 - `sign_and_encrypt`
 - `decrypt_and_verify`
 
-Read the following example to get a better undertanding:
+Read the following examples to get a better undertanding:
+
+
+### Using bare PKCS7::Cryptographer
 
 ```ruby
 
@@ -71,6 +74,8 @@ Read the following example to get a better undertanding:
   # It could be read if the CA_STORE of the reader has certificate of the
   # CA that signed the client certificate as trusted.
 
+  cryptographer = PKCS7::Cryptographer.new
+
   # Client <------------------------- CA Authority API
   encrypted_data = cryptographer.sign_and_encrypt(
     data: "Atletico Nacional de Medellin",
@@ -94,6 +99,55 @@ Read the following example to get a better undertanding:
   )
 
   # decrypted_data returns: "Atletico Nacional de Medellin"
+```
+
+### Using PKCS7::Cryptographer::Entity
+
+```ruby
+
+  # This script assumes you have a read_file method to read the certificates and
+  # keys. If you have any question about how to generate the keys/certificates
+  # check this post: https://mariadb.com/kb/en/certificate-creation-with-openssl/
+
+  # What we are going to do is sending a message from the CA Authority and read
+  # it from the Client:
+
+  # Certificate Authority PKI data
+  CA_KEY = read_file("ca.key")
+  CA_CERTIFICATE = read_file("ca.crt")
+
+  # Client PKI data
+  CLIENT_CERTIFICATE = read_file("client.crt")
+  CLIENT_KEY = read_file("client.key")
+
+  CA_STORE = OpenSSL::X509::Store.new
+  CA_STORE.add_cert(OpenSSL::X509::Certificate.new(CA_CERTIFICATE))
+
+  ca_entity = PKCS7::Cryptographer::Entity.new(
+    key: CA_KEY,
+    certificate: CA_CERTIFICATE,
+    ca_store: CA_STORE
+  )
+
+  client_entity = PKCS7::Cryptographer::Entity.new(
+    key: CLIENT_KEY,
+    certificate: CLIENT_CERTIFICATE,
+    ca_store: CA_STORE
+  )
+
+  # SEND MESSAGE TO THE CLIENT
+  # ----------------------------------------------------------------------------
+  data = "Victor Ibarbo"
+  encrypted_data = ca_entity.encrypt_data(data: data, to: client_entity)
+
+  # READ MESSAGE IN CLIENT
+  # ----------------------------------------------------------------------------
+  decrypted_data = client_entity.decrypt_data(
+    data: encrypted_data,
+    from: ca_entity
+  )
+
+  # decrypted_data returns: "Victor Ibarbo"
 ```
 
 ## Development
