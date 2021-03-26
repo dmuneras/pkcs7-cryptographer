@@ -8,6 +8,11 @@ module PKCS7
     # certificate, key or encrypted message string.
     ###
     module Initializers
+      # PRIVATE METHODS
+      # ------------------------------------------------------------------------
+
+      private
+
       def x509_certificate(certificate)
         wrap_in_class_or_return(certificate, OpenSSL::X509::Certificate)
       end

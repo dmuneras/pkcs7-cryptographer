@@ -1,6 +1,19 @@
 # frozen_string_literal: true
 
 RSpec.describe PKCS7::Cryptographer::Entity do
+  it "only responds to the public documented methods" do
+    entity = described_class.new(certificate: read_file("ca.crt"))
+
+    expect(
+      entity.public_methods(false)
+    ).to contain_exactly(
+      :encrypt_data,
+      :decrypt_data,
+      :trustable_entity?,
+      :certificate
+    )
+  end
+
   describe "#decrypt_data" do
     let(:ca_certificate) { read_file("ca.crt") }
     let(:ca_key) { read_file("ca.key") }

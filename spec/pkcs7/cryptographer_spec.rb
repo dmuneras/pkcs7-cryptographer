@@ -5,6 +5,12 @@ RSpec.describe PKCS7::Cryptographer do
     expect(PKCS7::Cryptographer::VERSION).not_to be nil
   end
 
+  it "only responds to the public documented methods" do
+    expect(
+      described_class.new.public_methods(false)
+    ).to contain_exactly(:decrypt_and_verify, :sign_and_encrypt)
+  end
+
   describe "#decrypt_and_verify" do
     context "when PKI info is correct" do
       let(:cryptographer) { described_class.new }
