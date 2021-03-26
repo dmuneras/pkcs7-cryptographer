@@ -34,7 +34,7 @@ RSpec.describe PKCS7::Cryptographer::Entity do
 
     it "decrypts message" do
       expect(
-        ca_entity.decrypt_data(data: data, from: client_entity)
+        ca_entity.decrypt_data(data: data, sender: client_entity)
       ).to eq("Totono Grisales")
     end
   end
@@ -71,17 +71,18 @@ RSpec.describe PKCS7::Cryptographer::Entity do
     it "sends encrypted mesage" do
       encrypted_data = ca_entity.encrypt_data(
         data: data,
-        to: client_entity
+        receiver: client_entity
       )
 
       expect(encrypted_data).not_to eq("Camilo Zuniga")
     end
 
     it "client can read it" do
-      encrypted_data = ca_entity.encrypt_data(data: data, to: client_entity)
+      encrypted_data =
+        ca_entity.encrypt_data(data: data, receiver: client_entity)
 
       expect(
-        client_entity.decrypt_data(data: encrypted_data, from: ca_entity)
+        client_entity.decrypt_data(data: encrypted_data, sender: ca_entity)
       ).to eq("Camilo Zuniga")
     end
   end

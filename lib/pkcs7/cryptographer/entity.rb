@@ -32,24 +32,24 @@ module PKCS7
         @ca_store.verify(entity.certificate)
       end
 
-      def encrypt_data(data:, to:)
-        perform_safely(to) do
+      def encrypt_data(data:, receiver:)
+        perform_safely(receiver) do
           @cryptographer.sign_and_encrypt(
             data: data,
             key: @key,
             certificate: @certificate,
-            public_certificate: to.certificate
+            public_certificate: receiver.certificate
           )
         end
       end
 
-      def decrypt_data(data:, from:)
-        perform_safely(from) do
+      def decrypt_data(data:, sender:)
+        perform_safely(sender) do
           @cryptographer.decrypt_and_verify(
             data: data,
             key: @key,
             certificate: @certificate,
-            public_certificate: from.certificate,
+            public_certificate: sender.certificate,
             ca_store: @ca_store
           )
         end

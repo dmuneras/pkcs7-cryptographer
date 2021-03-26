@@ -147,13 +147,13 @@ Please look at the following example:
   # SEND MESSAGE TO THE CLIENT
   # ----------------------------------------------------------------------------
   data = "Victor Ibarbo"
-  encrypted_data = ca_entity.encrypt_data(data: data, to: client_entity)
+  encrypted_data = ca_entity.encrypt_data(data: data, receiver: client_entity)
 
   # READ MESSAGE IN CLIENT
   # ----------------------------------------------------------------------------
   decrypted_data = client_entity.decrypt_data(
     data: encrypted_data,
-    from: ca_entity
+    sender: ca_entity
   )
 
   # decrypted_data returns: "Victor Ibarbo"
