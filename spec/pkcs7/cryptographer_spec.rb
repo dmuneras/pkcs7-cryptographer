@@ -43,54 +43,139 @@ RSpec.describe PKCS7::Cryptographer do
       end
     end
 
-    context "when entity is trustrable" do
-      context "when the message is from the expected entity" do
-        skip "decryption works" do
+    context "when top entity reads message from trustable entity" do
+      let(:cryptographer) { described_class.new }
+      let(:ca_certificate) { read_file("ca_authority/ROOT_CERTIFICATE") }
+      let(:ca_key) { read_file("ca_authority/ROOT_PRIVATE") }
+      let(:entity_a_certificate) do
+        read_file("ca_authority/ENTITY_A_CERTIFICATE")
+      end
+      let(:entity_a_key) { read_file("ca_authority/ENTITY_A_PRIVATE") }
+      let(:entity_b_certificate) do
+        read_file("ca_authority/ENTITY_B_CERTIFICATE")
+      end
+      let(:entity_b_key) { read_file("ca_authority/ENTITY_B_PRIVATE") }
+      let(:inpay_certificate) { read_file("ca_authority/ENTITY_B_CERTIFICATE") }
+      let(:inpay_key) { read_file("ca_authority/ENTITY_B_PRIVATE") }
+      let(:ca_store) do
+        ca_store = OpenSSL::X509::Store.new
+        ca_certificate_obj = OpenSSL::X509::Certificate.new(ca_certificate)
+        ca_store.add_cert(ca_certificate_obj)
+        ca_store
+      end
+
+      let(:message) do
+        read_file("ca_authority/messages/entity_b_to_inpay.pem")
+      end
+
+      let(:data) { "Sergio Ramos" }
+
+      let(:decrypt_and_verify) do
+        lambda do |data, entity_certificate|
+          cryptographer.decrypt_and_verify(
+            data: data,
+            key: inpay_key,
+            certificate: inpay_certificate,
+            public_certificate: entity_certificate,
+            ca_store: ca_store
+          )
         end
       end
 
-      context "when the message is from another trustrable entity" do
-        skip "decryption fails because the signature verification fails" do
+      context "with a message that is from the expected entity" do
+        it "decryption works" do
+          expect(
+            decrypt_and_verify.call(message, entity_b_certificate)
+          ).to eq(data)
+        end
+      end
+
+      context "when msg is from trustrable but not the expected entity" do
+        it "decryption fails because the signature verification fails" do
+          expect(
+            decrypt_and_verify.call(message, entity_a_certificate)
+          ).to eq(false)
+        end
+      end
+
+      context "when entities try to read each other messages" do
+        let(:message_for_b) do
+          cryptographer.sign_and_encrypt(
+            data: data,
+            key: inpay_key,
+            certificate: inpay_certificate,
+            public_certificate: entity_b_certificate
+          )
+        end
+
+        let(:decrypt_and_verify) do
+          lambda do |entity_reader_name, data|
+            entity_key = send("#{entity_reader_name}_key")
+            entity_certificate = send("#{entity_reader_name}_certificate")
+            cryptographer.decrypt_and_verify(
+              data: data,
+              key: entity_key,
+              certificate: entity_certificate,
+              public_certificate: inpay_certificate,
+              ca_store: ca_store
+            )
+          end
+        end
+
+        context "with a messages that is not for the entity" do
+          it "decryption fails" do
+            expect do
+              decrypt_and_verify.call("entity_a", message_for_b)
+            end.to raise_error(OpenSSL::PKCS7::PKCS7Error)
+          end
+        end
+
+        context "with a message that is for the entity" do
+          it "decrypts data" do
+            expect do
+              decrypt_and_verify.call("entity_b", message_for_b)
+            end.not_to raise_error
+          end
         end
       end
     end
+  end
 
-    describe "#sign_and_encrypt" do
-      context "when params are valid" do
-        let(:cryptographer) { described_class.new }
-        let(:ca_certificate) { read_file("ca.crt") }
-        let(:ca_key) { read_file("ca.key") }
-        let(:client_certificate) { read_file("client.crt") }
-        let(:client_key) { read_file("client.key") }
-        let(:data) { "Camilo Zuniga" }
-        let(:sign_and_encrypt_data) do
-          lambda {
-            cryptographer.sign_and_encrypt(
-              data: data,
-              key: ca_key,
-              certificate: ca_certificate,
-              public_certificate: client_certificate
-            )
-          }
-        end
+  describe "#sign_and_encrypt" do
+    context "when params are valid" do
+      let(:cryptographer) { described_class.new }
+      let(:ca_certificate) { read_file("ca.crt") }
+      let(:ca_key) { read_file("ca.key") }
+      let(:client_certificate) { read_file("client.crt") }
+      let(:client_key) { read_file("client.key") }
+      let(:data) { "Camilo Zuniga" }
+      let(:sign_and_encrypt_data) do
+        lambda {
+          cryptographer.sign_and_encrypt(
+            data: data,
+            key: ca_key,
+            certificate: ca_certificate,
+            public_certificate: client_certificate
+          )
+        }
+      end
 
-        it "doesnt return the original undecrypted value" do
-          encrypted_data = sign_and_encrypt_data.call
+      it "doesnt return the original undecrypted value" do
+        encrypted_data = sign_and_encrypt_data.call
 
-          expect(encrypted_data).not_to eq("Camilo Zuniga")
-        end
+        expect(encrypted_data).not_to eq("Camilo Zuniga")
+      end
 
-        it "returns a String" do
-          encrypted_data = sign_and_encrypt_data.call
+      it "returns a String" do
+        encrypted_data = sign_and_encrypt_data.call
 
-          expect(encrypted_data).to be_an_instance_of(String)
-        end
+        expect(encrypted_data).to be_an_instance_of(String)
+      end
 
-        it "returns valid String version of OpenSSL::PKCS7" do
-          encrypted_data = sign_and_encrypt_data.call
+      it "returns valid String version of OpenSSL::PKCS7" do
+        encrypted_data = sign_and_encrypt_data.call
 
-          expect { OpenSSL::PKCS7.new(encrypted_data) }.not_to raise_error
-        end
+        expect { OpenSSL::PKCS7.new(encrypted_data) }.not_to raise_error
       end
     end
   end
