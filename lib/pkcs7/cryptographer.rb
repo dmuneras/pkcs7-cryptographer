@@ -73,17 +73,22 @@ module PKCS7
       encrypted_data = pkcs7(data)
       decrypted_data = encrypted_data.decrypt(key, certificate)
       signed_data = OpenSSL::PKCS7.new(decrypted_data)
+      verified = verified_signature?(signed_data, public_certificate, ca_store)
 
-      verified_signature = signed_data.verify(
+      return false unless verified
+
+      signed_data.data
+    end
+
+    private
+
+    def verified_signature?(signed_data, public_certificate, ca_store)
+      signed_data.verify(
         [public_certificate],
         ca_store,
         nil,
         OpenSSL::PKCS7::NOINTERN | OpenSSL::PKCS7::NOCHAIN
       )
-
-      return false unless verified_signature
-
-      signed_data.data
     end
   end
 end

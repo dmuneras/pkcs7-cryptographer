@@ -44,16 +44,13 @@ RSpec.describe PKCS7::Cryptographer do
     end
 
     context "when entity is trustrable" do
-      context "and the message is from the expected entity" do
-        skip 'decryption works' do
-
+      context "when the message is from the expected entity" do
+        skip "decryption works" do
         end
-
       end
 
-      context "and the message is from another trustrable entity" do
-        skip 'decryption fails because the signature verification fails' do
-
+      context "when the message is from another trustrable entity" do
+        skip "decryption fails because the signature verification fails" do
         end
       end
     end
