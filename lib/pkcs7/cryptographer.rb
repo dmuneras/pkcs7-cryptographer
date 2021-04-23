@@ -39,12 +39,7 @@ module PKCS7
       certificate = x509_certificate(certificate)
       public_certificate = x509_certificate(public_certificate)
       signed_data = OpenSSL::PKCS7.sign(certificate, key, data)
-
-      encrypted_data = OpenSSL::PKCS7.encrypt(
-        [public_certificate],
-        signed_data.to_pem,
-        OpenSSL::Cipher.new("aes-256-cbc")
-      )
+      encrypted_data = encrypt(public_certificate, signed_data)
 
       encrypted_data.to_pem
     end
@@ -72,6 +67,7 @@ module PKCS7
       public_certificate = x509_certificate(public_certificate)
       encrypted_data = pkcs7(data)
       decrypted_data = encrypted_data.decrypt(key, certificate)
+
       signed_data = OpenSSL::PKCS7.new(decrypted_data)
       verified = verified_signature?(signed_data, public_certificate, ca_store)
 
@@ -81,6 +77,15 @@ module PKCS7
     end
 
     private
+
+    def encrypt(public_certificate, signed_data)
+      OpenSSL::PKCS7.encrypt(
+        [public_certificate],
+        signed_data.to_der,
+        OpenSSL::Cipher.new("aes-256-cbc"),
+        OpenSSL::PKCS7::BINARY
+      )
+    end
 
     def verified_signature?(signed_data, public_certificate, ca_store)
       signed_data.verify(
