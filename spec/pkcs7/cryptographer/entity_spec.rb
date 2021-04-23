@@ -2,7 +2,7 @@
 
 RSpec.describe PKCS7::Cryptographer::Entity do
   it "only responds to the public documented methods" do
-    entity = described_class.new(certificate: read_file("ca.crt"))
+    entity = described_class.new(certificate: read_file("self_signed/ca.crt"))
 
     expect(
       entity.public_methods(false)
@@ -15,11 +15,11 @@ RSpec.describe PKCS7::Cryptographer::Entity do
   end
 
   describe "#decrypt_data" do
-    let(:ca_certificate) { read_file("ca.crt") }
-    let(:ca_key) { read_file("ca.key") }
-    let(:client_certificate) { read_file("client.crt") }
-    let(:client_key) { read_file("client.key") }
-    let(:data) { read_file("encrypted_message_from_client.pem") }
+    let(:ca_certificate) { read_file("self_signed/ca.crt") }
+    let(:ca_key) { read_file("self_signed/ca.key") }
+    let(:client_certificate) { read_file("self_signed/envigado.crt") }
+    let(:client_key) { read_file("self_signed/envigado.key") }
+    let(:data) { read_file("self_signed/messages/envigado_to_ca.pem") }
 
     let(:ca_store) do
       ca_store = OpenSSL::X509::Store.new
@@ -48,15 +48,15 @@ RSpec.describe PKCS7::Cryptographer::Entity do
     it "decrypts message" do
       expect(
         ca_entity.decrypt_data(data: data, sender: client_entity)
-      ).to eq("Totono Grisales")
+      ).to eq("Hello")
     end
   end
 
   describe "#encrypt_data" do
-    let(:ca_certificate) { read_file("ca.crt") }
-    let(:ca_key) { read_file("ca.key") }
-    let(:client_certificate) { read_file("client.crt") }
-    let(:client_key) { read_file("client.key") }
+    let(:ca_certificate) { read_file("self_signed/ca.crt") }
+    let(:ca_key) { read_file("self_signed/ca.key") }
+    let(:client_certificate) { read_file("self_signed/envigado.crt") }
+    let(:client_key) { read_file("self_signed/envigado.key") }
     let(:data) { "Camilo Zuniga" }
     let(:ca_store) do
       ca_store = OpenSSL::X509::Store.new
@@ -101,8 +101,8 @@ RSpec.describe PKCS7::Cryptographer::Entity do
   end
 
   describe "#trustable?" do
-    let(:ca_certificate) { read_file("ca.crt") }
-    let(:ca_key) { read_file("ca.key") }
+    let(:ca_certificate) { read_file("self_signed/ca.crt") }
+    let(:ca_key) { read_file("self_signed/ca.key") }
     let(:ca_store) do
       ca_store = OpenSSL::X509::Store.new
       ca_certificate_obj =
@@ -113,7 +113,7 @@ RSpec.describe PKCS7::Cryptographer::Entity do
     end
 
     context "when entity is trustable" do
-      let(:client_certificate) { read_file("client.crt") }
+      let(:client_certificate) { read_file("self_signed/envigado.crt") }
       let(:client_entity) do
         described_class.new(
           certificate: client_certificate
