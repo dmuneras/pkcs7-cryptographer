@@ -27,6 +27,7 @@ RSpec.describe PKCS7::Cryptographer do
 
           ca_store
         end
+
         let(:decrypt_and_verify) do
           lambda {
             cryptographer.decrypt_and_verify(
@@ -40,16 +41,15 @@ RSpec.describe PKCS7::Cryptographer do
         end
 
         it "decrypts the data" do
-          cryptographer
-            .decrypt_and_verify(
-              data: data,
-              key: ca_key,
-              certificate: ca_certificate,
-              public_certificate: client_certificate,
-              ca_store: ca_store
-            )
+          cryptographer.decrypt_and_verify(
+            data: data,
+            key: ca_key,
+            certificate: ca_certificate,
+            public_certificate: client_certificate,
+            ca_store: ca_store
+          )
 
-          expect(decrypt_and_verify.call).to eq("Hello")
+          expect(decrypt_and_verify.call).to eq("Totono Grisales")
         end
       end
     end

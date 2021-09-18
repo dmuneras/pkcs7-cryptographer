@@ -48,7 +48,7 @@ RSpec.describe PKCS7::Cryptographer::Entity do
     it "decrypts message" do
       expect(
         ca_entity.decrypt_data(data: data, sender: client_entity)
-      ).to eq("Hello")
+      ).to eq("Totono Grisales")
     end
   end
 
