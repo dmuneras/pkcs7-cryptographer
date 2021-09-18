@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 require "openssl"
+require "active_support/core_ext/date/calculations"
+require "active_support/all"
+require 'securerandom'
 require_relative "cryptographer/version"
 require_relative "cryptographer/initializers"
 
@@ -16,6 +19,10 @@ module PKCS7
   ###
   class Cryptographer
     include PKCS7::Cryptographer::Initializers
+
+    # CONSTANS
+    # --------------------------------------------------------------------------
+    CYPHER_ALGORITHM = "aes-256-cbc"
 
     # PUBLIC METHODS
     # --------------------------------------------------------------------------
@@ -76,13 +83,20 @@ module PKCS7
       signed_data.data
     end
 
+    def sign_certificate(csr:, key:, certificate:, valid_until:  Time.current + 10.years)
+      valid_until.to_time.utc
+      check_csr(csr)
+
+      sign_csr(csr, key, certificate, valid_until)
+    end
+
     private
 
-    def encrypt(public_certificate, signed_data)
+    def encrypt(public_certificate, signed_data, cypher_algorithm = CYPHER_ALGORITHM)
       OpenSSL::PKCS7.encrypt(
         [public_certificate],
         signed_data.to_der,
-        OpenSSL::Cipher.new("aes-256-cbc"),
+        OpenSSL::Cipher.new(cypher_algorithm),
         OpenSSL::PKCS7::BINARY
       )
     end
@@ -95,5 +109,27 @@ module PKCS7
         OpenSSL::PKCS7::NOINTERN | OpenSSL::PKCS7::NOCHAIN
       )
     end
+
+    def check_csr(signing_request)
+      csr = OpenSSL::X509::Request.new signing_request
+      raise 'CSR can not be verified' unless csr.verify(csr.public_key)
+   end
+
+   def sign_csr(request, key, certificate, valid_until)
+      signing_request = certificate_signing_request(request)
+      key = rsa_key(key)
+      certificate = x509_certificate(certificate)
+      csr_cert = OpenSSL::X509::Certificate.new
+      csr_cert.serial = Time.now.to_i
+      csr_cert.version = 2 # TODO: Check what to put here
+      csr_cert.not_before = Time.current
+      csr_cert.not_after = valid_until
+      csr_cert.subject = signing_request.subject
+      csr_cert.public_key = signing_request.public_key
+      csr_cert.issuer = certificate.subject
+      csr_cert.sign key, OpenSSL::Digest::SHA1.new
+
+      x509_certificate(csr_cert.to_pem)
+   end
   end
 end

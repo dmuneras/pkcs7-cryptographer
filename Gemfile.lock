@@ -2,14 +2,25 @@ PATH
   remote: .
   specs:
     pkcs7-cryptographer (1.0.1)
+      activesupport (>= 6.1.4.1)
 
 GEM
   remote: https://rubygems.org/
   specs:
+    activesupport (6.1.4.1)
+      concurrent-ruby (~> 1.0, >= 1.0.2)
+      i18n (>= 1.6, < 2)
+      minitest (>= 5.1)
+      tzinfo (~> 2.0)
+      zeitwerk (~> 2.3)
     ast (2.4.2)
     coderay (1.1.3)
+    concurrent-ruby (1.1.9)
     diff-lcs (1.4.4)
+    i18n (1.8.10)
+      concurrent-ruby (~> 1.0)
     method_source (1.0.0)
+    minitest (5.14.4)
     parallel (1.20.1)
     parser (3.0.0.0)
       ast (~> 2.4.1)
@@ -50,7 +61,11 @@ GEM
       rubocop (~> 1.0)
       rubocop-ast (>= 1.1.0)
     ruby-progressbar (1.11.0)
+    timecop (0.9.4)
+    tzinfo (2.0.4)
+      concurrent-ruby (~> 1.0)
     unicode-display_width (2.0.0)
+    zeitwerk (2.4.2)
 
 PLATFORMS
   x86_64-darwin-19
@@ -64,6 +79,7 @@ DEPENDENCIES
   rubocop (= 1.12.0)
   rubocop-rake (= 0.5.1)
   rubocop-rspec (= 2.2.0)
+  timecop (= 0.9.4)
 
 BUNDLED WITH
    2.2.3
