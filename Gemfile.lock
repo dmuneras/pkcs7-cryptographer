@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pkcs7-cryptographer (1.0.1)
+    pkcs7-cryptographer (1.1.1)
       activesupport (>= 6.1.4.1)
 
 GEM
