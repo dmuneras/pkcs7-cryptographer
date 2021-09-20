@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "openssl"
+require "active_support/all"
 require_relative "cryptographer/version"
 require_relative "cryptographer/initializers"
 
@@ -16,6 +17,10 @@ module PKCS7
   ###
   class Cryptographer
     include PKCS7::Cryptographer::Initializers
+
+    # CONSTANS
+    # --------------------------------------------------------------------------
+    CYPHER_ALGORITHM = "aes-256-cbc"
 
     # PUBLIC METHODS
     # --------------------------------------------------------------------------
@@ -76,13 +81,29 @@ module PKCS7
       signed_data.data
     end
 
+    def sign_certificate(
+      csr:,
+      key:,
+      certificate:,
+      valid_until: Time.current + 10.years
+    )
+      valid_until.to_time.utc
+      check_csr(csr)
+
+      sign_csr(csr, key, certificate, valid_until)
+    end
+
     private
 
-    def encrypt(public_certificate, signed_data)
+    def encrypt(
+      public_certificate,
+      signed_data,
+      cypher_algorithm = CYPHER_ALGORITHM
+    )
       OpenSSL::PKCS7.encrypt(
         [public_certificate],
         signed_data.to_der,
-        OpenSSL::Cipher.new("aes-256-cbc"),
+        OpenSSL::Cipher.new(cypher_algorithm),
         OpenSSL::PKCS7::BINARY
       )
     end
@@ -94,6 +115,42 @@ module PKCS7
         nil,
         OpenSSL::PKCS7::NOINTERN | OpenSSL::PKCS7::NOCHAIN
       )
+    end
+
+    def check_csr(signing_request)
+      csr = OpenSSL::X509::Request.new signing_request
+      raise "CSR can not be verified" unless csr.verify(csr.public_key)
+    end
+
+    def sign_csr(request, key, issuer_certificate, valid_until)
+      request = certificate_signing_request(request)
+      key = rsa_key(key)
+      issuer_certificate = x509_certificate(issuer_certificate)
+
+      csr_cert = build_certificate_from_csr(
+        request,
+        issuer_certificate,
+        valid_until
+      )
+      csr_cert.sign(key, OpenSSL::Digest.new("SHA1")) # TODO: review this one
+      x509_certificate(csr_cert.to_pem)
+    end
+
+    def build_certificate_from_csr(
+      signing_request,
+      issuer_certificate,
+      valid_until
+    )
+      certificate = OpenSSL::X509::Certificate.new
+      certificate.serial = Time.now.to_i
+      certificate.version = 2 # TODO: Check what to put here
+      certificate.not_before = Time.current
+      certificate.not_after = valid_until
+      certificate.subject = signing_request.subject
+      certificate.public_key = signing_request.public_key
+      certificate.issuer = issuer_certificate.subject
+
+      certificate
     end
   end
 end

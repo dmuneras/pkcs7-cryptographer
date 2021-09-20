@@ -8,7 +8,11 @@ RSpec.describe PKCS7::Cryptographer do
   it "only responds to the public documented methods" do
     expect(
       described_class.new.public_methods(false)
-    ).to contain_exactly(:decrypt_and_verify, :sign_and_encrypt)
+    ).to contain_exactly(
+      :decrypt_and_verify,
+      :sign_and_encrypt,
+      :sign_certificate
+    )
   end
 
   describe "#decrypt_and_verify" do
@@ -196,7 +200,7 @@ RSpec.describe PKCS7::Cryptographer do
       end
     end
 
-    context "when using self a certificate authority" do
+    context "when using a certificate authority" do
       context "when params are valid" do
         let(:cryptographer) { described_class.new }
         let(:ca_certificate) { read_file("ca_authority/ROOT_CERTIFICATE") }
@@ -233,6 +237,109 @@ RSpec.describe PKCS7::Cryptographer do
           encrypted_data = sign_and_encrypt_data.call
 
           expect { OpenSSL::PKCS7.new(encrypted_data) }.not_to raise_error
+        end
+      end
+    end
+  end
+
+  describe "#sign_certificate" do
+    context "with valid params" do
+      let(:cryptographer) { described_class.new }
+      let(:ca_certificate) { read_file("ca_authority/ROOT_CERTIFICATE") }
+      let(:ca_key) { read_file("ca_authority/ROOT_PRIVATE") }
+      let(:new_entity_key) { read_file("ca_authority/NEW_ENTITY") }
+      let(:csr) { read_file("ca_authority/CERTIFICATE_SIGNING_REQUEST") }
+      let(:ca_store) do
+        ca_store = OpenSSL::X509::Store.new
+        ca_certificate_obj = OpenSSL::X509::Certificate.new(ca_certificate)
+        ca_store.add_cert(ca_certificate_obj)
+        ca_store
+      end
+
+      let(:signed_certificate) do
+        cryptographer.sign_certificate(
+          csr: csr,
+          certificate: ca_certificate,
+          key: ca_key
+        )
+      end
+
+      it "returns valid String version of OpenSSL::X509::Certificate" do
+        expect do
+          OpenSSL::X509::Certificate.new(signed_certificate)
+        end.not_to raise_error
+      end
+
+      it "sets subject info in the cetificate" do
+        expected_entries = {
+          "C" => "DK",
+          "ST" => "Copenhagen",
+          "L" => "Sydhavn",
+          "O" => "FSOCIETY"
+        }
+
+        signed_certificate.subject.to_a.each do |entry|
+          name, data, = entry
+          expect(expected_entries[name]).to eq(data)
+        end
+      end
+
+      context "when passing 'valid_until'" do
+        let(:valid_until) { Time.current + 5.years }
+        let(:signed_certificate) do
+          cryptographer.sign_certificate(
+            csr: csr,
+            certificate: ca_certificate,
+            key: ca_key,
+            valid_until: valid_until
+          )
+        end
+
+        before { Timecop.freeze(Time.current) }
+
+        after { Timecop.return }
+
+        it "creates a certificate valid until the passed date" do
+          expect(valid_until.utc.to_i).to eql(signed_certificate.not_after.to_i)
+        end
+      end
+
+      context "when using signed certificate" do
+        let(:data) { "Hello new Camilo Zuniga" }
+        let(:entity_b_key) { read_file("ca_authority/ENTITY_B_PRIVATE") }
+        let(:entity_b_certificate) do
+          read_file("ca_authority/ENTITY_B_CERTIFICATE")
+        end
+
+        let(:sign_and_encrypt) do
+          lambda do |new_entity_certificate|
+            cryptographer.sign_and_encrypt(
+              data: "Hello new Camilo Zuniga",
+              key: entity_b_key,
+              certificate: entity_b_certificate,
+              public_certificate: new_entity_certificate
+            )
+          end
+        end
+
+        let(:decrypt_and_verify) do
+          lambda do |encrypted_msg, new_entity_certificate|
+            cryptographer.decrypt_and_verify(
+              data: encrypted_msg,
+              key: new_entity_key,
+              certificate: new_entity_certificate,
+              public_certificate: entity_b_certificate,
+              ca_store: ca_store
+            )
+          end
+        end
+
+        it "certificate allows to read messages from trusted entities" do
+          encrypted_msg = sign_and_encrypt.call(signed_certificate)
+          decrypted_message = decrypt_and_verify.call(encrypted_msg,
+                                                      signed_certificate)
+
+          expect(decrypted_message).to eq("Hello new Camilo Zuniga")
         end
       end
     end

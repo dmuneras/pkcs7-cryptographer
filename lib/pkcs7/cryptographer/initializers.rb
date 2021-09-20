@@ -21,6 +21,10 @@ module PKCS7
         wrap_in_class_or_return(key, OpenSSL::PKey::RSA)
       end
 
+      def certificate_signing_request(request)
+        wrap_in_class_or_return(request, OpenSSL::X509::Request)
+      end
+
       def pkcs7(pkcs7)
         wrap_in_class_or_return(pkcs7, OpenSSL::PKCS7)
       end

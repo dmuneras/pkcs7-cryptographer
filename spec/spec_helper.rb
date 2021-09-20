@@ -3,6 +3,7 @@
 require "pkcs7/cryptographer"
 require "pkcs7/cryptographer/entity"
 require "pry"
+require "timecop"
 
 # Load RSpec helpers
 ROOT_FOLDER = Pathname.new(File.expand_path("..", __dir__))
