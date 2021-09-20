@@ -265,9 +265,9 @@ RSpec.describe PKCS7::Cryptographer do
       end
 
       it "returns valid String version of OpenSSL::X509::Certificate" do
-        expect {
+        expect do
           OpenSSL::X509::Certificate.new(signed_certificate)
-        }.not_to raise_error
+        end.not_to raise_error
       end
 
       it "sets subject info in the cetificate" do
@@ -279,7 +279,7 @@ RSpec.describe PKCS7::Cryptographer do
         }
 
         signed_certificate.subject.to_a.each do |entry|
-          name, data, _ = entry
+          name, data, = entry
           expect(expected_entries[name]).to eq(data)
         end
       end
@@ -295,8 +295,9 @@ RSpec.describe PKCS7::Cryptographer do
           )
         end
 
-        before(:each) { Timecop.freeze(Time.current) }
-        after(:each) { Timecop.return }
+        before { Timecop.freeze(Time.current) }
+
+        after { Timecop.return }
 
         it "creates a certificate valid until the passed date" do
           expect(valid_until.utc.to_i).to eql(signed_certificate.not_after.to_i)
@@ -335,7 +336,8 @@ RSpec.describe PKCS7::Cryptographer do
 
         it "certificate allows to read messages from trusted entities" do
           encrypted_msg = sign_and_encrypt.call(signed_certificate)
-          decrypted_message = decrypt_and_verify.call(encrypted_msg, signed_certificate)
+          decrypted_message = decrypt_and_verify.call(encrypted_msg,
+                                                      signed_certificate)
 
           expect(decrypted_message).to eq("Hello new Camilo Zuniga")
         end
