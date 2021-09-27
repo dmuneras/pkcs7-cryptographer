@@ -1,14 +1,13 @@
-# PKCS7::Cryptographer
+# PKCS7 Cryptographer
 
 [![Gem Version](https://badge.fury.io/rb/pkcs7-cryptographer.svg)](https://badge.fury.io/rb/pkcs7-cryptographer)
 ![main workflow](https://github.com/dmuneras/pkcs7-cryptographer/actions/workflows/main.yml/badge.svg)
-
 
 Cryptographer is an small utility to encrypt, sign and decrypt messages
 using PKCS7.
 
 PKCS7 is used to store signed and encrypted data.This specific implementation
-uses `aes-256-cbc` as chipher in the encryption process. If you want to read
+uses `aes-256-cbc` as cipher in the encryption process. If you want to read
 more information about the involved data structures and theory around this,
 please visit:
 
@@ -36,7 +35,7 @@ Or install it yourself as:
 ```
 ## Usage
 
-### Using bare PKCS7::Cryptographer
+### Using bare `PKCS7::Cryptographer`
 
 After installing the gem you will have the `PKCS7::Cryptographer` available.
 
@@ -47,8 +46,6 @@ After installing the gem you will have the `PKCS7::Cryptographer` available.
 
 If you want to use the barebones cryptographer, you can. Please look at the
 following example:
-
-
 
 ```ruby
   require 'pkcs7/cryptographer'
@@ -160,7 +157,7 @@ Please look at the following example:
 ```
 
 When using entities, all the complexity of knowing which PKI credentials to
-send to the cryptographer dissapears. You only need to initialize the
+send to the cryptographer disappears. You only need to initialize the
 entities and use the methods to indicate to whom the message will be sent.
 
 If you want to verify if certain entity you defined "trust" another one, use the
@@ -224,6 +221,6 @@ The gem is available as open source under the terms of the
 
 ## Code of Conduct
 
-Everyone interacting in the Pkcs7::Cryptographer project's codebases, issue
+Everyone interacting in the `PKCS7::Cryptographer` project's codebases, issue
 trackers, chat rooms and mailing lists is expected to follow the
 [code of conduct](https://github.com/dmuneras/pkcs7-cryptographer/blob/master/CODE_OF_CONDUCT.md).
