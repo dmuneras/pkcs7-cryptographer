@@ -10,6 +10,7 @@ RSpec.describe PKCS7::Cryptographer do
       described_class.new.public_methods(false)
     ).to contain_exactly(
       :decrypt_and_verify,
+      :sign,
       :sign_and_encrypt,
       :sign_certificate
     )
@@ -22,7 +23,6 @@ RSpec.describe PKCS7::Cryptographer do
         let(:ca_certificate) { read_file("self_signed/ca.crt") }
         let(:ca_key) { read_file("self_signed/ca.key") }
         let(:client_certificate) { read_file("self_signed/envigado.crt") }
-        let(:client_key) { read_file("self_signed/envigado.key") }
         let(:data) { read_file("self_signed/messages/envigado_to_ca.pem") }
         let(:ca_store) do
           ca_store = OpenSSL::X509::Store.new
@@ -160,6 +160,82 @@ RSpec.describe PKCS7::Cryptographer do
     end
   end
 
+  describe "#sign" do
+    context "when using self signed certificates" do
+      context "when params are valid" do
+        let(:cryptographer) { described_class.new }
+        let(:ca_certificate) { read_file("self_signed/ca.crt") }
+        let(:ca_key) { read_file("self_signed/ca.key") }
+        let(:data) { "Camilo Zuniga" }
+
+        let(:sign_data) do
+          lambda {
+            cryptographer.sign(
+              data: data,
+              key: ca_key,
+              certificate: ca_certificate
+            )
+          }
+        end
+
+        it "doesnt return the original undecrypted value" do
+          signed_data = sign_data.call
+
+          expect(signed_data).not_to eq("Camilo Zuniga")
+        end
+
+        it "returns a String" do
+          signed_data = sign_data.call
+
+          expect(signed_data).to be_an_instance_of(String)
+        end
+
+        it "returns valid String version of OpenSSL::PKCS7" do
+          signed_data = sign_data.call
+
+          expect { OpenSSL::PKCS7.new(signed_data) }.not_to raise_error
+        end
+      end
+    end
+
+    context "when using a certificate authority" do
+      context "when params are valid" do
+        let(:cryptographer) { described_class.new }
+        let(:ca_certificate) { read_file("ca_authority/ROOT_CERTIFICATE") }
+        let(:ca_key) { read_file("ca_authority/ROOT_PRIVATE") }
+        let(:data) { "Camilo Zuniga" }
+
+        let(:sign_data) do
+          lambda {
+            cryptographer.sign(
+              data: data,
+              key: ca_key,
+              certificate: ca_certificate
+            )
+          }
+        end
+
+        it "doesnt return the original undecrypted value" do
+          encrypted_data = sign_data.call
+
+          expect(encrypted_data).not_to eq("Camilo Zuniga")
+        end
+
+        it "returns a String" do
+          encrypted_data = sign_data.call
+
+          expect(encrypted_data).to be_an_instance_of(String)
+        end
+
+        it "returns valid String version of OpenSSL::PKCS7" do
+          encrypted_data = sign_data.call
+
+          expect { OpenSSL::PKCS7.new(encrypted_data) }.not_to raise_error
+        end
+      end
+    end
+  end
+
   describe "#sign_and_encrypt" do
     context "when using self signed certificates" do
       context "when params are valid" do
@@ -167,7 +243,6 @@ RSpec.describe PKCS7::Cryptographer do
         let(:ca_certificate) { read_file("self_signed/ca.crt") }
         let(:ca_key) { read_file("self_signed/ca.key") }
         let(:client_certificate) { read_file("self_signed/envigado.crt") }
-        let(:client_key) { read_file("self_signed/envigado.key") }
         let(:data) { "Camilo Zuniga" }
         let(:sign_and_encrypt_data) do
           lambda {
@@ -208,7 +283,6 @@ RSpec.describe PKCS7::Cryptographer do
         let(:client_certificate) do
           read_file("ca_authority/ENTITY_A_CERTIFICATE")
         end
-        let(:client_key) { read_file("ca_authority/ENTITY_A_PRIVATE") }
         let(:data) { "Camilo Zuniga" }
         let(:sign_and_encrypt_data) do
           lambda {

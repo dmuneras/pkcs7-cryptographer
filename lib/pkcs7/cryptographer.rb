@@ -26,6 +26,25 @@ module PKCS7
     # --------------------------------------------------------------------------
 
     ###
+    # @description: Take some string data, this method only signs the data
+    # using the information given.
+    # @param [String] data
+    # @param [String|OpenSSL::PKey::RSA] key
+    # @param [String|OpenSSL::X509::Certificate] certificate
+    # @param [NilClass|Integer] OpenSSL signing flags
+    # @return [String] signed data
+    ###
+    def sign(
+      data:,
+      key:,
+      certificate:
+    )
+      signed_data = raw_sign(data, certificate, key)
+
+      signed_data.to_pem
+    end
+
+    ###
     # @description: Take some string data, this method encrypts and sign the
     # data using the information given.
     # @param [String] data
@@ -40,10 +59,8 @@ module PKCS7
       certificate:,
       public_certificate:
     )
-      key = rsa_key(key)
-      certificate = x509_certificate(certificate)
       public_certificate = x509_certificate(public_certificate)
-      signed_data = OpenSSL::PKCS7.sign(certificate, key, data)
+      signed_data = raw_sign(data, certificate, key)
       encrypted_data = encrypt(public_certificate, signed_data)
 
       encrypted_data.to_pem
@@ -94,6 +111,16 @@ module PKCS7
     end
 
     private
+
+    def raw_sign(
+      data,
+      certificate,
+      key
+    )
+      key = rsa_key(key)
+      certificate = x509_certificate(certificate)
+      OpenSSL::PKCS7.sign(certificate, key, data)
+    end
 
     def encrypt(
       public_certificate,
