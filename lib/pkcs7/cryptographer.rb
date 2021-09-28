@@ -37,9 +37,11 @@ module PKCS7
     def sign(
       data:,
       key:,
-      certificate:
+      certificate:,
+      # certs: [],
+      flags: nil
     )
-      signed_data = raw_sign(data, certificate, key)
+      signed_data = raw_sign(data, certificate, key, flags)
 
       signed_data.to_pem
     end
@@ -51,16 +53,18 @@ module PKCS7
     # @param [String|OpenSSL::PKey::RSA] key
     # @param [String|OpenSSL::X509::Certificate] certificate
     # @param [String|OpenSSL::X509::Certificate] public_certificate
+    # @param [NilClass|Integer] OpenSSL signing flags
     # @return [String] encrypted data
     ###
     def sign_and_encrypt(
       data:,
       key:,
       certificate:,
-      public_certificate:
+      public_certificate:,
+      flags: nil
     )
       public_certificate = x509_certificate(public_certificate)
-      signed_data = raw_sign(data, certificate, key)
+      signed_data = raw_sign(data, certificate, key, flags)
       encrypted_data = encrypt(public_certificate, signed_data)
 
       encrypted_data.to_pem
@@ -115,11 +119,13 @@ module PKCS7
     def raw_sign(
       data,
       certificate,
-      key
+      key,
+      # certs,
+      flags
     )
       key = rsa_key(key)
       certificate = x509_certificate(certificate)
-      OpenSSL::PKCS7.sign(certificate, key, data)
+      OpenSSL::PKCS7.sign(certificate, key, data, [], flags)
     end
 
     def encrypt(
