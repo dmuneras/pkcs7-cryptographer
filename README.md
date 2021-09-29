@@ -39,8 +39,9 @@ Or install it yourself as:
 
 After installing the gem you will have the `PKCS7::Cryptographer` available.
 
-`PKCS7::Cryptographer` is a class that provides two public methods:
+`PKCS7::Cryptographer` is a class that provides a few public methods:
 
+- `sign`
 - `sign_and_encrypt`
 - `decrypt_and_verify`
 
@@ -64,16 +65,38 @@ following example:
   CLIENT_CERTIFICATE = read_file("client.crt")
   CLIENT_KEY = read_file("client.key")
 
-  # SEND MESSAGE TO THE CLIENT
+  cryptographer = PKCS7::Cryptographer.new
+
+  # SIGN MESSAGE FOR THE CLIENT
   # ----------------------------------------------------------------------------
-  # Encrypt a message in the CA Authority API to be sent to the Client.
+  # Sign a message in the CA Authority API to be sent to the Client.
+
+  # It could be read if the CA_STORE of the reader has the certificate of the
+  # CA that signed the client certificate as trusted.
+
+  # You can provide optional argument `:flags` like this:
+  #   flags: OpenSSL::PKCS7::BINARY | OpenSSL::PKCS7::NOCHAIN
+
+  # Client <------------------------- CA Authority API
+  signed_data = cryptographer.sign(
+    data: "Atletico Nacional de Medellin",
+    key: CA_KEY,
+    certificate: CA_CERTIFICATE
+  )
+
+  # signed_data is a PEM formatted string
+
+  # SIGN AND ENCRYPT MESSAGE FOR THE CLIENT
+  # ----------------------------------------------------------------------------
+  # Sign and encrypt a message in the CA Authority API to be sent to the Client.
   # Only the client can read the message since the required public
   # certificate to read it is the client certificate.
 
   # It could be read if the CA_STORE of the reader has the certificate of the
   # CA that signed the client certificate as trusted.
 
-  cryptographer = PKCS7::Cryptographer.new
+  # You also can provide optional argument `:flags` for signing like this:
+  #   flags: OpenSSL::PKCS7::BINARY | OpenSSL::PKCS7::NOCHAIN
 
   # Client <------------------------- CA Authority API
   encrypted_data = cryptographer.sign_and_encrypt(
@@ -85,7 +108,7 @@ following example:
 
   # encrypted_data is a PEM formatted string
 
-  # READ MESSAGE IN CLIENT
+  # DECRYPT AND VERIFY MESSAGE IN THE CLIENT
   # ----------------------------------------------------------------------------
   # Store of trusted certificates
   CA_STORE = OpenSSL::X509::Store.new
@@ -102,7 +125,7 @@ following example:
   # decrypted_data returns: "Atletico Nacional de Medellin"
 ```
 
-### Using PKCS7::Cryptographer::Entity
+### Using `PKCS7::Cryptographer::Entity`
 
 There is a possibility to use entities to communicate using encrypted data. In
 order to use it you have to import the entities implementation.
