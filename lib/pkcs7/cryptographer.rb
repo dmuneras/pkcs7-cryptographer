@@ -138,9 +138,7 @@ module PKCS7
 
     def verified_signature?(signed_data, public_certificate, ca_store)
       signed_data.verify(
-        [public_certificate],
-        ca_store,
-        nil,
+        [public_certificate], ca_store, nil,
         OpenSSL::PKCS7::NOINTERN | OpenSSL::PKCS7::NOCHAIN
       )
     end
