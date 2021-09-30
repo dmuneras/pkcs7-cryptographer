@@ -9,6 +9,7 @@ RSpec.describe PKCS7::Cryptographer do
     expect(
       described_class.new.public_methods(false)
     ).to contain_exactly(
+      :verify,
       :decrypt_and_verify,
       :sign,
       :sign_and_encrypt,
@@ -16,8 +17,71 @@ RSpec.describe PKCS7::Cryptographer do
     )
   end
 
+  describe "#verify" do
+    subject(:verify) do
+      cryptographer.verify(
+        data: data,
+        public_certificate: entity_certificate,
+        ca_store: ca_store
+      )
+    end
+
+    let(:cryptographer) { described_class.new }
+    let(:ca_store) do
+      ca_store = OpenSSL::X509::Store.new
+      ca_certificate_obj = OpenSSL::X509::Certificate.new(ca_certificate)
+      ca_store.add_cert(ca_certificate_obj)
+      ca_store
+    end
+
+    context "when using self_signed certificates" do
+      let(:ca_certificate) { read_file("self_signed/ca.crt") }
+
+      context "when PKI info is correct" do
+        let(:entity_certificate) { read_file("self_signed/envigado.crt") }
+        let(:data) { read_file("self_signed/messages/envigado_signed.pem") }
+
+        it "verifies the data" do
+          expect(verify).to eq("Totono Grisales")
+        end
+      end
+    end
+
+    context "when using certificates signed by a certificate authority" do
+      let(:ca_certificate) { read_file("ca_authority/ROOT_CERTIFICATE") }
+
+      context "when top entity reads message from trustable entity" do
+        let(:data) do
+          read_file("ca_authority/messages/entity_b_to_inpay_signed.pem")
+        end
+
+        context "with a message that is from the expected entity" do
+          let(:entity_certificate) do
+            read_file("ca_authority/INPAY_CERTIFICATE")
+          end
+
+          it "verifying works" do
+            expect(verify).to eq("Sergio Ramos")
+          end
+        end
+
+        context "when msg is from trustrable but not the expected entity" do
+          let(:entity_certificate) do
+            read_file("ca_authority/ENTITY_A_CERTIFICATE")
+          end
+
+          it "verifying fails" do
+            expect(verify).to have_attributes(
+              error_string: "signer certificate not found"
+            )
+          end
+        end
+      end
+    end
+  end
+
   describe "#decrypt_and_verify" do
-    describe "when using self_signed certificates" do
+    context "when using self_signed certificates" do
       context "when PKI info is correct" do
         let(:cryptographer) { described_class.new }
         let(:ca_certificate) { read_file("self_signed/ca.crt") }
@@ -112,7 +176,9 @@ RSpec.describe PKCS7::Cryptographer do
           it "decryption fails because the signature verification fails" do
             expect(
               decrypt_and_verify.call(message, entity_a_certificate)
-            ).to eq(false)
+            ).to have_attributes(
+              error_string: "signer certificate not found"
+            )
           end
         end
 

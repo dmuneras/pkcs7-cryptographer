@@ -74,6 +74,32 @@ module PKCS7
     end
 
     ###
+    # @description: Take some PKCS7 signed data, this method verifies
+    # the signature to ensure only is read by the intented audience.
+    # @param [String|OpenSSL::PKCS7] data
+    # @param [String|OpenSSL::X509::Certificate] public_certificate
+    # @param [OpenSSL::X509::Store] ca_store
+    # @return [String] verified data
+    ###
+    def verify(
+      data:,
+      public_certificate:,
+      ca_store:
+    )
+      public_certificate = x509_certificate(public_certificate)
+      signed_data = pkcs7(data)
+
+      verified = signed_data.verify(
+        [public_certificate], ca_store, nil,
+        OpenSSL::PKCS7::NOINTERN | OpenSSL::PKCS7::NOCHAIN
+      )
+
+      return signed_data unless verified
+
+      signed_data.data
+    end
+
+    ###
     # @description: Take some PKCS7 encrypted data, this method decrypt the
     # data using the information given and verify the signature to ensure only
     # is read by the intented audience.
@@ -92,17 +118,13 @@ module PKCS7
       ca_store:
     )
       key = rsa_key(key)
-      certificate = x509_certificate(certificate)
-      public_certificate = x509_certificate(public_certificate)
-      encrypted_data = pkcs7(data)
-      decrypted_data = encrypted_data.decrypt(key, certificate)
+      decrypted_data = pkcs7(data).decrypt(key, x509_certificate(certificate))
 
-      signed_data = OpenSSL::PKCS7.new(decrypted_data)
-      verified = verified_signature?(signed_data, public_certificate, ca_store)
-
-      return false unless verified
-
-      signed_data.data
+      verify(
+        data: OpenSSL::PKCS7.new(decrypted_data),
+        public_certificate: x509_certificate(public_certificate),
+        ca_store: ca_store
+      )
     end
 
     def sign_certificate(
