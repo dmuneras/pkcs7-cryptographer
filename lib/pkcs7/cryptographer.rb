@@ -79,20 +79,19 @@ module PKCS7
     # @param [String|OpenSSL::PKCS7] data
     # @param [String|OpenSSL::X509::Certificate] public_certificate
     # @param [OpenSSL::X509::Store] ca_store
+    # @param [NilClass|Integer] OpenSSL verifying flags
     # @return [String] verified data
     ###
     def verify(
       data:,
       public_certificate:,
-      ca_store:
+      ca_store:,
+      flags: OpenSSL::PKCS7::NOINTERN | OpenSSL::PKCS7::NOCHAIN
     )
       public_certificate = x509_certificate(public_certificate)
       signed_data = pkcs7(data)
 
-      verified = signed_data.verify(
-        [public_certificate], ca_store, nil,
-        OpenSSL::PKCS7::NOINTERN | OpenSSL::PKCS7::NOCHAIN
-      )
+      verified = signed_data.verify([public_certificate], ca_store, nil, flags)
 
       return signed_data unless verified
 
@@ -108,6 +107,7 @@ module PKCS7
     # @param [String|OpenSSL::X509::Certificate] certificate
     # @param [String|OpenSSL::X509::Certificate] public_certificate
     # @param [OpenSSL::X509::Store] ca_store
+    # @param [NilClass|Integer] OpenSSL verifying flags
     # @return [String] decrypted data
     ###
     def decrypt_and_verify(
@@ -115,7 +115,8 @@ module PKCS7
       key:,
       certificate:,
       public_certificate:,
-      ca_store:
+      ca_store:,
+      flags: OpenSSL::PKCS7::NOINTERN | OpenSSL::PKCS7::NOCHAIN
     )
       key = rsa_key(key)
       decrypted_data = pkcs7(data).decrypt(key, x509_certificate(certificate))
@@ -123,7 +124,8 @@ module PKCS7
       verify(
         data: OpenSSL::PKCS7.new(decrypted_data),
         public_certificate: x509_certificate(public_certificate),
-        ca_store: ca_store
+        ca_store: ca_store,
+        flags: flags
       )
     end
 
