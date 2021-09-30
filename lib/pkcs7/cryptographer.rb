@@ -116,22 +116,14 @@ module PKCS7
 
     private
 
-    def raw_sign(
-      data,
-      certificate,
-      key,
-      # certs,
-      flags
-    )
+    def raw_sign(data, certificate, key, flags)
       key = rsa_key(key)
       certificate = x509_certificate(certificate)
       OpenSSL::PKCS7.sign(certificate, key, data, [], flags)
     end
 
     def encrypt(
-      public_certificate,
-      signed_data,
-      cypher_algorithm = CYPHER_ALGORITHM
+      public_certificate, signed_data, cypher_algorithm = CYPHER_ALGORITHM
     )
       OpenSSL::PKCS7.encrypt(
         [public_certificate],
@@ -143,9 +135,7 @@ module PKCS7
 
     def verified_signature?(signed_data, public_certificate, ca_store)
       signed_data.verify(
-        [public_certificate],
-        ca_store,
-        nil,
+        [public_certificate], ca_store, nil,
         OpenSSL::PKCS7::NOINTERN | OpenSSL::PKCS7::NOCHAIN
       )
     end
@@ -161,18 +151,14 @@ module PKCS7
       issuer_certificate = x509_certificate(issuer_certificate)
 
       csr_cert = build_certificate_from_csr(
-        request,
-        issuer_certificate,
-        valid_until
+        request, issuer_certificate, valid_until
       )
       csr_cert.sign(key, OpenSSL::Digest.new("SHA1")) # TODO: review this one
       x509_certificate(csr_cert.to_pem)
     end
 
     def build_certificate_from_csr(
-      signing_request,
-      issuer_certificate,
-      valid_until
+      signing_request, issuer_certificate, valid_until
     )
       certificate = OpenSSL::X509::Certificate.new
       certificate.serial = Time.now.to_i
