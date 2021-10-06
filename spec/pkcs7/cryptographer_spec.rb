@@ -285,7 +285,7 @@ RSpec.describe PKCS7::Cryptographer do
       end
 
       context "when passing 'valid_until'" do
-        let(:valid_until) { Time.current + 5.years }
+        let(:valid_until) { Time.now + 5 * 365 * 24 * 3600 } # 5 years
         let(:signed_certificate) do
           cryptographer.sign_certificate(
             csr: csr,
@@ -295,7 +295,7 @@ RSpec.describe PKCS7::Cryptographer do
           )
         end
 
-        before { Timecop.freeze(Time.current) }
+        before { Timecop.freeze(Time.now) }
 
         after { Timecop.return }
 
