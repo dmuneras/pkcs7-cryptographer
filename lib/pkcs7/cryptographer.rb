@@ -31,6 +31,7 @@ module PKCS7
     # @param [String] data
     # @param [String|OpenSSL::PKey::RSA] key
     # @param [String|OpenSSL::X509::Certificate] certificate
+    # @param [Array<OpenSSL::X509::Certificate>] certs
     # @param [NilClass|Integer] OpenSSL signing flags
     # @return [String] signed data
     ###
@@ -38,10 +39,10 @@ module PKCS7
       data:,
       key:,
       certificate:,
-      # certs: [],
+      certs: [],
       flags: nil
     )
-      signed_data = raw_sign(data, certificate, key, flags)
+      signed_data = raw_sign(data, certificate, key, certs, flags)
 
       signed_data.to_pem
     end
@@ -53,6 +54,7 @@ module PKCS7
     # @param [String|OpenSSL::PKey::RSA] key
     # @param [String|OpenSSL::X509::Certificate] certificate
     # @param [String|OpenSSL::X509::Certificate] public_certificate
+    # @param [Array<OpenSSL::X509::Certificate>] certs
     # @param [NilClass|Integer] OpenSSL signing flags
     # @return [String] encrypted data
     ###
@@ -61,10 +63,11 @@ module PKCS7
       key:,
       certificate:,
       public_certificate:,
+      certs: [],
       flags: nil
     )
       public_certificate = x509_certificate(public_certificate)
-      signed_data = raw_sign(data, certificate, key, flags)
+      signed_data = raw_sign(data, certificate, key, certs, flags)
       encrypted_data = encrypt(public_certificate, signed_data)
 
       encrypted_data.to_pem
@@ -116,10 +119,10 @@ module PKCS7
 
     private
 
-    def raw_sign(data, certificate, key, flags)
+    def raw_sign(data, certificate, key, certs, flags)
       key = rsa_key(key)
       certificate = x509_certificate(certificate)
-      OpenSSL::PKCS7.sign(certificate, key, data, [], flags)
+      OpenSSL::PKCS7.sign(certificate, key, data, certs, flags)
     end
 
     def encrypt(
@@ -135,7 +138,9 @@ module PKCS7
 
     def verified_signature?(signed_data, public_certificate, ca_store)
       signed_data.verify(
-        [public_certificate], ca_store, nil,
+        [public_certificate],
+        ca_store,
+        nil,
         OpenSSL::PKCS7::NOINTERN | OpenSSL::PKCS7::NOCHAIN
       )
     end

@@ -74,8 +74,17 @@ following example:
   # It could be read if the CA_STORE of the reader has the certificate of the
   # CA that signed the client certificate as trusted.
 
-  # You can provide optional argument `:flags` like this:
+  # You can provide optional arguments:
+  #
+  # * `:certs` like this:
+  #   ```
+  #   certs: [OpenSSL::X509::Certificate.new(some_sert_content)]
+  #   ```
+  #
+  # * `:flags` like this:
+  #   ```
   #   flags: OpenSSL::PKCS7::BINARY | OpenSSL::PKCS7::NOCHAIN
+  #   ```
 
   # Client <------------------------- CA Authority API
   signed_data = cryptographer.sign(
@@ -95,8 +104,8 @@ following example:
   # It could be read if the CA_STORE of the reader has the certificate of the
   # CA that signed the client certificate as trusted.
 
-  # You also can provide optional argument `:flags` for signing like this:
-  #   flags: OpenSSL::PKCS7::BINARY | OpenSSL::PKCS7::NOCHAIN
+  # You also can provide optional argument `:certs` and `:flags`
+  # as described above.
 
   # Client <------------------------- CA Authority API
   encrypted_data = cryptographer.sign_and_encrypt(
