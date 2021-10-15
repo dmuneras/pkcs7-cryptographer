@@ -26,24 +26,48 @@ module PKCS7
     # --------------------------------------------------------------------------
 
     ###
+    # @description: Take some string data, this method only signs the data
+    # using the information given.
+    # @param [String] data
+    # @param [String|OpenSSL::PKey::RSA] key
+    # @param [String|OpenSSL::X509::Certificate] certificate
+    # @param [Array<OpenSSL::X509::Certificate>] certs
+    # @param [NilClass|Integer] OpenSSL signing flags
+    # @return [String] signed data
+    ###
+    def sign(
+      data:,
+      key:,
+      certificate:,
+      certs: [],
+      flags: nil
+    )
+      signed_data = raw_sign(data, certificate, key, certs, flags)
+
+      signed_data.to_pem
+    end
+
+    ###
     # @description: Take some string data, this method encrypts and sign the
     # data using the information given.
     # @param [String] data
     # @param [String|OpenSSL::PKey::RSA] key
     # @param [String|OpenSSL::X509::Certificate] certificate
     # @param [String|OpenSSL::X509::Certificate] public_certificate
+    # @param [Array<OpenSSL::X509::Certificate>] certs
+    # @param [NilClass|Integer] OpenSSL signing flags
     # @return [String] encrypted data
     ###
     def sign_and_encrypt(
       data:,
       key:,
       certificate:,
-      public_certificate:
+      public_certificate:,
+      certs: [],
+      flags: nil
     )
-      key = rsa_key(key)
-      certificate = x509_certificate(certificate)
       public_certificate = x509_certificate(public_certificate)
-      signed_data = OpenSSL::PKCS7.sign(certificate, key, data)
+      signed_data = raw_sign(data, certificate, key, certs, flags)
       encrypted_data = encrypt(public_certificate, signed_data)
 
       encrypted_data.to_pem
@@ -95,10 +119,14 @@ module PKCS7
 
     private
 
+    def raw_sign(data, certificate, key, certs, flags)
+      key = rsa_key(key)
+      certificate = x509_certificate(certificate)
+      OpenSSL::PKCS7.sign(certificate, key, data, certs, flags)
+    end
+
     def encrypt(
-      public_certificate,
-      signed_data,
-      cypher_algorithm = CYPHER_ALGORITHM
+      public_certificate, signed_data, cypher_algorithm = CYPHER_ALGORITHM
     )
       OpenSSL::PKCS7.encrypt(
         [public_certificate],
@@ -128,18 +156,14 @@ module PKCS7
       issuer_certificate = x509_certificate(issuer_certificate)
 
       csr_cert = build_certificate_from_csr(
-        request,
-        issuer_certificate,
-        valid_until
+        request, issuer_certificate, valid_until
       )
       csr_cert.sign(key, OpenSSL::Digest.new("SHA1")) # TODO: review this one
       x509_certificate(csr_cert.to_pem)
     end
 
     def build_certificate_from_csr(
-      signing_request,
-      issuer_certificate,
-      valid_until
+      signing_request, issuer_certificate, valid_until
     )
       certificate = OpenSSL::X509::Certificate.new
       certificate.serial = Time.now.to_i

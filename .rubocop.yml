@@ -16,7 +16,14 @@ Layout/LineLength:
   Max: 80
 
 Metrics/BlockLength:
-  IgnoredMethods: ['describe', 'context']
+  IgnoredMethods:
+    - describe
+    - context
+Metrics/ClassLength:
+  ## https://github.com/dmuneras/pkcs7-cryptographer/pull/7#discussion_r727844821
+  Max: 150
+Metrics/ParameterLists:
+  Max: 10
 
 RSpec/MultipleMemoizedHelpers:
   Enabled: false
