@@ -117,6 +117,22 @@ following example:
 
   # encrypted_data is a PEM formatted string
 
+  # VERIFY MESSAGE IN THE CLIENT
+  # ----------------------------------------------------------------------------
+  # Store of trusted certificates
+  CA_STORE = OpenSSL::X509::Store.new
+  CA_STORE.add_cert(OpenSSL::X509::Certificate.new(CA_CERTIFICATE))
+
+  verified_data = cryptographer.verify(
+    data: signed_data,
+    public_certificate: CA_CERTIFICATE,
+    ca_store: CA_STORE
+  )
+
+  # verified_data returns: "Atletico Nacional de Medellin"
+
+  # signed_data is a PEM formatted string
+
   # DECRYPT AND VERIFY MESSAGE IN THE CLIENT
   # ----------------------------------------------------------------------------
   # Store of trusted certificates
