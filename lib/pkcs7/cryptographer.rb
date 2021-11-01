@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "openssl"
-require "active_support/all"
 require_relative "cryptographer/version"
 require_relative "cryptographer/initializers"
 
@@ -109,7 +108,7 @@ module PKCS7
       csr:,
       key:,
       certificate:,
-      valid_until: Time.current + 10.years
+      valid_until: Time.now + 10 * 365 * 24 * 3600 # 10 years
     )
       valid_until.to_time.utc
       check_csr(csr)
@@ -168,7 +167,7 @@ module PKCS7
       certificate = OpenSSL::X509::Certificate.new
       certificate.serial = Time.now.to_i
       certificate.version = 2 # TODO: Check what to put here
-      certificate.not_before = Time.current
+      certificate.not_before = Time.now
       certificate.not_after = valid_until
       certificate.subject = signing_request.subject
       certificate.public_key = signing_request.public_key
