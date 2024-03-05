@@ -5,6 +5,9 @@ require "pkcs7/cryptographer/entity"
 require "pry"
 require "timecop"
 
+require "simplecov"
+SimpleCov.start
+
 # Load RSpec helpers
 ROOT_FOLDER = Pathname.new(File.expand_path("..", __dir__))
 support_files = File.join(ROOT_FOLDER, "spec", "helpers", "**", "*.rb")
