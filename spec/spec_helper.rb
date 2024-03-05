@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "pkcs7/cryptographer"
-require "pkcs7/cryptographer/entity"
+require_relative "../lib/pkcs7/cryptographer"
+require_relative "../lib/pkcs7/cryptographer/entity"
 require "pry"
 require "timecop"
 
